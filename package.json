@@ -1,7 +1,7 @@
 {
   "name": "phaser3-pixel-ui",
   "version": "1.0.0",
-  "description": "Pixel art style input box for Phaser 3",
+  "description": "Pixel art style UI elements for Phaser 3",
   "main": "js/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

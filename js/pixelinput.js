@@ -1,4 +1,5 @@
 const Phaser = require("phaser");
+const { getCharacterAtIndex, tintBitmapTextBetween } = require("./helper");
 
 const border = 1;
 const padding = 2;
@@ -72,12 +73,7 @@ class PixelInput extends Phaser.GameObjects.Container {
 	}
 
 	tintText(start, end, color) {
-		let characters = this._bmtext.getTextBounds().characters;
-		let chr_start = this._getCharacterAtIndex(characters, start);
-		let chr_end = this._getCharacterAtIndex(characters, end);
-		let start_i = chr_start.i;
-		let end_i = chr_end.i + (chr_end.idx < end ? 1 : 0);
-		this._bmtext.setCharacterTint(start_i, end_i - start_i, true, color);
+		tintBitmapTextBetween(this._bmtext, start, end, color, true);
 	}
 
 	clearHistory() {
@@ -286,9 +282,8 @@ class PixelInput extends Phaser.GameObjects.Container {
 	}
 
 	_refresh() {
-		let characters = this._bmtext.getTextBounds().characters;
-		this._updateTextPosition(characters);
-		this._updateSelection(characters);
+		this._updateTextPosition();
+		this._updateSelection();
 		this._config.onRefresh();
 	}
 
@@ -311,11 +306,11 @@ class PixelInput extends Phaser.GameObjects.Container {
 		return [...text].filter(char => this._allowed_characters.includes(char)).join("");
 	}
 
-	_updateTextPosition(characters) {
+	_updateTextPosition() {
 		if (this._bmtext.width < this._width - padding * 2) {
 			this._bmtext.x = padding;
 		} else {
-			let cursor_x = this._getCursorCoordinates(characters, this._cursor_pos).x;
+			let cursor_x = this._getCursorCoordinates(this._cursor_pos).x;
 			let left_offset = Math.max(0, padding - cursor_x);
 			let right_offset = Math.max(0, cursor_x - (this._width - padding - 1));
 			this._bmtext.x += left_offset - right_offset;
@@ -324,7 +319,7 @@ class PixelInput extends Phaser.GameObjects.Container {
 		if (this.text.split("\n").length * this._line_height < this._height - padding * 2) {
 			this._bmtext.y = padding;
 		} else {
-			let cursor_y = this._getCursorCoordinates(characters, this._cursor_pos).y;
+			let cursor_y = this._getCursorCoordinates(this._cursor_pos).y;
 			let cursor_bottom = cursor_y + this._cursor_height;
 			let top_offset = Math.max(0, padding - cursor_y);
 			let bottom_offset = Math.max(0, cursor_bottom - (this._height - padding));
@@ -332,64 +327,47 @@ class PixelInput extends Phaser.GameObjects.Container {
 		}
 	}
 
-	_updateSelection(characters) {
-		this._drawMultilineSelection(characters, this.selectionStart, this.selectionEnd);
-		this._updateSelectionTint(characters);
+	_updateSelection() {
+		this._drawMultilineSelection(this.selectionStart, this.selectionEnd);
+		this._updateSelectionTint();
 	}
 
-	_drawSingleLineSelection(characters, start, end) {
-		let start_coords = this._getCursorCoordinates(characters, start);
+	_drawSingleLineSelection(start, end) {
+		let start_coords = this._getCursorCoordinates(start);
 		let start_x = start_coords.x;
 		let start_y = start_coords.y;
-		let end_x = this._getCursorCoordinates(characters, end).x;
+		let end_x = this._getCursorCoordinates(end).x;
 		this._cursor
 			.fillStyle(this._config.selection_color)
 			.fillRect(start_x, start_y, Math.max(1, end_x - start_x + 1), this._cursor_height);
 	}
 
-	_drawMultilineSelection(characters, start, end) {
+	_drawMultilineSelection(start, end) {
 		this._cursor.clear();
 		for (let i = start; i < end; i++) {
 			if (this.text[i] === "\n") {
-				this._drawSingleLineSelection(characters, start, i);
+				this._drawSingleLineSelection(start, i);
 				start = i + 1;
 			}
 		}
-		this._drawSingleLineSelection(characters, start, end);
+		this._drawSingleLineSelection(start, end);
 	}
 
-	_updateSelectionTint(characters) {
-		let chr_start = this._getCharacterAtIndex(characters, this.selectionStart);
-		let chr_end = this._getCharacterAtIndex(characters, this.selectionEnd);
-		let start = chr_start.i + (chr_start.idx < this.selectionStart ? 1 : 0);
-		let end = chr_end.i + (chr_end.idx < this.selectionEnd ? 1 : 0);
-		this._bmtext
-			.setCharacterTint(0, -1, true, this._config.text_color)
-			.setCharacterTint(start, end - start, true, this._config.selected_text_color);
+	_updateSelectionTint() {
+		this._bmtext.setCharacterTint(0, -1, true, this._config.text_color);
+		tintBitmapTextBetween(
+			this._bmtext,
+			this.selectionStart,
+			this.selectionEnd,
+			this._config.selected_text_color,
+			true
+		);
 	}
 
-	_getCursorCoordinates(characters, char_index) {
-		let character = this._getCharacterAtIndex(characters, char_index);
+	_getCursorCoordinates(char_index) {
+		let character = getCharacterAtIndex(this._bmtext, char_index);
 		let x = character.idx === char_index ? character.x : character.r + 1;
 		return { x: x + this._bmtext.x - 1, y: character.t + this._bmtext.y };
-	}
-
-	_getCharacterAtIndex(characters, char_index) {
-		let default_chr = { i: -1, idx: -1 };
-		let rightmost = characters
-			.filter(c => c.idx <= char_index)
-			.reduce((rightmost, c) => (rightmost.idx < c.idx ? c : rightmost), default_chr);
-		if (this.text[char_index - 1] === "\n" || char_index === 0) {
-			let lines = this.text.slice(0, char_index).split("\n").length - 1;
-			return {
-				i: rightmost.i,
-				idx: rightmost.idx,
-				x: padding - 1,
-				r: padding - 2,
-				t: lines * this._line_height
-			};
-		}
-		return rightmost;
 	}
 }
 
