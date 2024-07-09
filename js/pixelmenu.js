@@ -57,8 +57,11 @@ class PixelMenu extends Phaser.GameObjects.Container {
 		this._setHighlight(button, true);
 		let display_y = button.y + this.y;
 		this.y +=
-			Math.max(this.y - display_y, 0) -
-			Math.max(display_y + this._config.button_height - this.y - this._config.height, 0);
+			Math.max(this._config.y - display_y, 0) -
+			Math.max(
+				display_y + this._config.button_height - this._config.y - this._config.height,
+				0
+			);
 	}
 
 	get selection() {
