@@ -1,6 +1,7 @@
 const Phaser = require("phaser");
 const { PixelMenu } = require("./pixelmenu");
 const { PixelInput } = require("./pixelinput");
+const Helpers = require("./helper");
 
 class PixelUIPlugin extends Phaser.Plugins.BasePlugin {
 	constructor(pluginManager) {
@@ -13,6 +14,10 @@ class PixelUIPlugin extends Phaser.Plugins.BasePlugin {
 			plugin: PixelUIPlugin,
 			start: true
 		};
+	}
+
+	static get Helpers() {
+		return Helpers;
 	}
 
 	init() {
