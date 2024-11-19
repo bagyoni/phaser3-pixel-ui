@@ -28,10 +28,10 @@ class PixelMenu extends Phaser.GameObjects.Container {
 			.createGeometryMask();
 		this.setMask(mask);
 		scene.input.keyboard
-			.addKey(Phaser.Input.Keyboard.KeyCodes.UP, true, true)
+			.addKey(Phaser.Input.Keyboard.KeyCodes.UP, false, true)
 			.on("down", this._onUp, this);
 		scene.input.keyboard
-			.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN, true, true)
+			.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN, false, true)
 			.on("down", this._onDown, this);
 	}
 
